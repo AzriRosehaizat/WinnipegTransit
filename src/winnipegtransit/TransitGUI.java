@@ -13,12 +13,15 @@ import org.json.*;
  */
 public class TransitGUI extends javax.swing.JFrame {
     private JSONObject stopInfo;
+    private JSONObject scheduleInfo;
     private TransitConnection connection;
     private JSONObject stop;
     private JSONObject geo;
+    private JSONArray stopSchedule;
     private String name;
     private String latitude;
     private String longitude;
+    
 
     /**
      * Creates new form TransitGUI
@@ -229,14 +232,20 @@ public class TransitGUI extends javax.swing.JFrame {
         if (evt.getSource() == btnCheck)
         {
             connection = new TransitConnection(this.txtStop.getText());
-            stopInfo = connection.getJsonInfo();
+            stopInfo = connection.getStopInfo();
+            scheduleInfo = connection.getScheduleInfo();
             
             System.out.println(stopInfo);
+            System.out.println(scheduleInfo);
             
             try
             {
                 stop = stopInfo.getJSONObject("stop");
                 geo = stop.getJSONObject("centre").getJSONObject("geographic");
+                stopSchedule = scheduleInfo.getJSONObject("stop-schedule").getJSONArray("route-schedules");
+                
+                //loop through the objects and get the name then create another array that has the arrival times for that bus
+                //put all of the stop items into the schedule text area.
             
                 name = stop.getString("name");
                 latitude = geo.getString("latitude");
