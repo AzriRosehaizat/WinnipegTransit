@@ -38,8 +38,8 @@ public class TransitGUI extends javax.swing.JFrame {
     private long time;    
     private final String API_KEY = "api-key=bEUgnZTNurbZtGAnBnJT";
     private final String WT_URL = "http://api.winnipegtransit.com/";
-    DateFormat dayAndTime = new SimpleDateFormat("EEE, MMM, d  - HH:mm");
-    DateFormat tf = new SimpleDateFormat("HH:mm");
+    DateFormat dayAndTime = new SimpleDateFormat("EEE, MMM, d  - h:mm a");
+    DateFormat tf = new SimpleDateFormat("h:mm");
 
     /**
      * Creates new form TransitGUI
@@ -399,7 +399,7 @@ public class TransitGUI extends javax.swing.JFrame {
                         busName = busArrivals.get(j).getBusName();
                         arrivalTime = busArrivals.get(j).getArrivalTime();
                         
-                        tarSchedule.append(busName + " - " + tf.format(arrivalTime) + "\n");
+                        tarSchedule.append(tf.format(arrivalTime) + " - " + busName + "\n");
                     }
                     
                     tarSchedule.append("\n");
