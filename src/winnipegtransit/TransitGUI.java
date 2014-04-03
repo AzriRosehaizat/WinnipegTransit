@@ -5,30 +5,132 @@
  */
 
 package winnipegtransit;
-import org.json.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Date;
+import java.net.URL;
+import java.net.MalformedURLException;
+import org.json.JSONObject;
+import org.json.JSONException;
+import java.util.Calendar;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
+
 
 /**
  *
  * @author owen
  */
 public class TransitGUI extends javax.swing.JFrame {
-    private JSONObject stopInfo;
-    private JSONObject scheduleInfo;
-    private TransitConnection connection;
-    private JSONObject stop;
-    private JSONObject geo;
-    private JSONArray stopSchedule;
+    private StopInfo stopInfo;
+    private Schedule schedule;
+    private TransitConnection connection;  
     private String name;
     private String latitude;
     private String longitude;
+    private Date queryDateTime;
+    private Calendar calendar;
+    private URL timeURL;
+    private JSONObject timeJson;
+    private long time;
+ 
     
+    private final String API_KEY = "api-key=bEUgnZTNurbZtGAnBnJT";
+    private final String WT_URL = "http://api.winnipegtransit.com/";
 
     /**
      * Creates new form TransitGUI
      */
     public TransitGUI() {
         initComponents();
+        setTime();
     }
+    
+    private Date parseToDate(String dateString)
+    {
+        return javax.xml.bind.DatatypeConverter.parseDateTime(dateString).getTime();
+        
+        //PICK UP FROM HERE
+    }
+            
+    private void setTime()
+    {
+        
+        String dateString;
+        
+        try
+        {
+            timeURL = new URL(WT_URL + "/time.json?" + API_KEY);
+            timeJson = retrieveFromWeb(timeURL);
+            
+            dateString = timeJson.getString("time");
+            
+            //calendar = javax.xml.bind.DatatypeConverter.parseDateTime(dateString);
+            queryDateTime = parseToDate(dateString);
+                    
+            DateFormat format = new SimpleDateFormat("EEE, MMM, d  - HH:mm");
+            lblTime.setText(format.format(queryDateTime));
+            
+
+                    
+        }
+        catch (MalformedURLException malx)
+        {
+            malx.printStackTrace();
+        }
+        catch (IOException iox)
+        {
+            tarSchedule.append("Could not connect to Winnipeg Transit service. Please check your internet connection.");
+        }
+        catch (NullPointerException nex)
+        {
+            //Null pointer will be thrown because there is no connection available. The message above will be displayed.
+        }         
+    }
+    
+    //pull this out into a seperate class so it can be used from both this cass and the transitConnection class.
+    private JSONObject retrieveFromWeb(URL url)
+    {
+        BufferedReader in;
+        String strLine;
+        StringBuilder jsonInfo;
+        jsonInfo = new StringBuilder();
+        in = null;
+        JSONObject toReturn = null;
+       //read the stream from the URL into a buffered reader
+        try
+        {
+            in = new BufferedReader(new InputStreamReader(url.openStream()));
+            
+            while ((strLine = in.readLine()) != null )
+            {
+                jsonInfo.append(strLine);
+            }
+            
+            in.close();
+        }
+        catch (IOException iox)
+        {
+            System.out.println("\nInvalid stop number or connection unavailable. Please try again.");
+        }
+        
+        try
+        {
+
+            toReturn  = new JSONObject(jsonInfo.toString());
+        }
+        catch (JSONException jex)
+        {
+            tarSchedule.setText("Could not connect to Winnipeg Transit Service. Please check your internet connection.");
+        }
+        
+        return toReturn;
+
+    }
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -57,6 +159,8 @@ public class TransitGUI extends javax.swing.JFrame {
         jLabel5 = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tarFeatures = new javax.swing.JTextArea();
+        jLabel6 = new javax.swing.JLabel();
+        lblTime = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -120,47 +224,58 @@ public class TransitGUI extends javax.swing.JFrame {
         tarFeatures.setRows(5);
         jScrollPane2.setViewportView(tarFeatures);
 
+        jLabel6.setFont(new java.awt.Font("Droid Sans", 0, 15)); // NOI18N
+        jLabel6.setText("System Time:");
+
+        lblTime.setFont(new java.awt.Font("Droid Sans", 0, 15)); // NOI18N
+        lblTime.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblTime.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(37, 37, 37)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 27, Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel5))
-                .addGap(37, 37, 37))
-            .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(100, 100, 100)
-                        .addComponent(lblStopNo)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtStop, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(btnCheck))
+                    .addComponent(lblName, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(lblName, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGap(18, 18, 18))
+                                .addGap(100, 100, 100)
+                                .addComponent(lblStopNo)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel1)
+                                    .addGroup(jPanel1Layout.createSequentialGroup()
+                                        .addComponent(txtStop, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(18, 18, 18)
+                                        .addComponent(btnCheck))))
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(152, 152, 152)
-                                .addComponent(jLabel1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                            .addComponent(lblLatitude, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel3))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                            .addComponent(lblLongitude, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel2))
-                        .addGap(19, 19, 19)))
+                                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(49, 49, 49)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(jLabel3)
+                                    .addComponent(jLabel2))
+                                .addGap(26, 26, 26)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(lblLatitude, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(lblLongitude, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addGap(0, 68, Short.MAX_VALUE)))
                 .addContainerGap())
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(102, 102, 102)
+                        .addComponent(jLabel5)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel4)
+                        .addGap(146, 146, 146)
+                        .addComponent(jLabel6)
+                        .addGap(18, 18, 18)
+                        .addComponent(lblTime, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addGap(12, 12, 12))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -171,24 +286,30 @@ public class TransitGUI extends javax.swing.JFrame {
                     .addComponent(txtStop, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnCheck))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2)
-                    .addComponent(jLabel3))
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(lblName, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(lblTime, javax.swing.GroupLayout.DEFAULT_SIZE, 30, Short.MAX_VALUE)
+                    .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(26, 26, 26)
+                .addComponent(jLabel5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblName, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblLongitude, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblLatitude, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel4)
-                    .addComponent(jLabel5))
-                .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jScrollPane2)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 180, Short.MAX_VALUE))
-                .addContainerGap(55, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(lblLatitude, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(lblLongitude, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(13, Short.MAX_VALUE))
         );
 
         lblName.getAccessibleContext().setAccessibleName("lblName");
@@ -200,11 +321,11 @@ public class TransitGUI extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(0, 155, Short.MAX_VALUE)
+                .addGap(0, 169, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(title)
                     .addComponent(author))
-                .addGap(0, 156, Short.MAX_VALUE))
+                .addGap(0, 170, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.CENTER, layout.createSequentialGroup()
                 .addGap(6, 6, 6)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -229,37 +350,94 @@ public class TransitGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_txtStopActionPerformed
 
     private void btnCheckActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckActionPerformed
+        ScheduleItem si = null;
+        ArrayList<ScheduleItem> scheduleItems;
+        ArrayList<BusArrival> busArrivals;
+        ArrayList<StopFeature> stopFeatures;
+        String busName;
+        String arrivalTime;
+        StopFeature currentFeature;
+        String featureName;
+        int featureCount;
+        
         if (evt.getSource() == btnCheck)
         {
-            connection = new TransitConnection(this.txtStop.getText());
-            stopInfo = connection.getStopInfo();
-            scheduleInfo = connection.getScheduleInfo();
-            
-            System.out.println(stopInfo);
-            System.out.println(scheduleInfo);
-            
             try
             {
-                stop = stopInfo.getJSONObject("stop");
-                geo = stop.getJSONObject("centre").getJSONObject("geographic");
-                stopSchedule = scheduleInfo.getJSONObject("stop-schedule").getJSONArray("route-schedules");
+             
+                setTime();
                 
-                //loop through the objects and get the name then create another array that has the arrival times for that bus
-                //put all of the stop items into the schedule text area.
-            
-                name = stop.getString("name");
-                latitude = geo.getString("latitude");
-                longitude = geo.getString("longitude");
+                tarSchedule.setText("Checking stop information. Please wait...\n");
+                connection = new TransitConnection(this.txtStop.getText());
+                stopInfo = connection.getStopInfo();
+                schedule = connection.getScheduleInfo();
+                scheduleItems = schedule.getScheduleItems();
+                stopFeatures = connection.getStopFeatures();
+
+                name = stopInfo.getName();
+                latitude = stopInfo.getLatitude();
+                longitude = stopInfo.getLongitude();
+             
             
                 lblName.setText(name);
                 lblLatitude.setText(latitude);
                 lblLongitude.setText(longitude);
+                
+                tarSchedule.setText("");                
+             
+                
+                
+                for (int i = 0; i < scheduleItems.size(); i++)
+                {
+                    si = scheduleItems.get(i);
+                    busArrivals = si.getBusArrivals();
+                    tarSchedule.append(si.getRouteName() + "\n");
+                    tarSchedule.append("--------------------------------------------------\n");
+                    
+                    for (int j = 0; j < busArrivals.size(); j++)
+                    {
+                        busName = busArrivals.get(j).getBusName();
+                        arrivalTime = busArrivals.get(j).getArrivalTime();
+                        
+                        tarSchedule.append(busName + " - " + arrivalTime + "\n");
+                    }
+                    
+                    tarSchedule.append("\n");
+                }
+                
+                if (stopFeatures.isEmpty())
+                {
+                     tarFeatures.setText("This stop has no special features.");       
+                }
+                else
+                {
+                    tarFeatures.setText("");                
+                
+                    for (int i = 0; i < stopFeatures.size(); i++)
+                    {
+                        currentFeature = stopFeatures.get(i);
+                        featureName = currentFeature.getName();
+                        featureCount = currentFeature.getCount();
+
+                        if (featureCount > 1 && featureName.equals("Bench"))
+                        {
+                            featureName += "es";
+                        }
+
+                        tarFeatures.append(featureCount + " " + featureName + "\n");                    
+
+                    }
+                }
+                
             }
-            catch (org.json.JSONException jex)
+            catch (JSONException jex)
             {
-                jex.printStackTrace();
+               
             }
-            
+            catch (NullPointerException nex)
+            {
+                tarSchedule.append("Invalid stop number. Please enter a new number.\n");
+            }
         }
     }//GEN-LAST:event_btnCheckActionPerformed
 
@@ -306,6 +484,7 @@ public class TransitGUI extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
@@ -313,6 +492,7 @@ public class TransitGUI extends javax.swing.JFrame {
     private javax.swing.JLabel lblLongitude;
     private javax.swing.JLabel lblName;
     private javax.swing.JLabel lblStopNo;
+    private javax.swing.JLabel lblTime;
     private javax.swing.JTextArea tarFeatures;
     private javax.swing.JTextArea tarSchedule;
     private javax.swing.JLabel title;
