@@ -15,7 +15,7 @@ public class Schedule {
 
     private ArrayList<ScheduleItem> scheduleItems;
     
-    public Schedule(String name, ArrayList<ScheduleItem> scheduleItems)
+    public Schedule(ArrayList<ScheduleItem> scheduleItems)
     {
         this.scheduleItems = scheduleItems;
     }

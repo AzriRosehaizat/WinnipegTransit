@@ -14,11 +14,8 @@ import java.net.URL;
 import java.net.MalformedURLException;
 import org.json.JSONObject;
 import org.json.JSONException;
-import java.util.Calendar;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-
-
 
 /**
  *
@@ -32,10 +29,8 @@ public class TransitGUI extends javax.swing.JFrame {
     private String latitude;
     private String longitude;
     private Date queryDateTime;
-    private Calendar calendar;
     private URL timeURL;
-    private JSONObject timeJson;
-    private long time;    
+    private JSONObject timeJson;  
     private final String API_KEY = "api-key=bEUgnZTNurbZtGAnBnJT";
     private final String WT_URL = "http://api.winnipegtransit.com/";
     DateFormat dayAndTime = new SimpleDateFormat("EEE, MMM, d  - h:mm a");
@@ -53,7 +48,6 @@ public class TransitGUI extends javax.swing.JFrame {
     {
         return javax.xml.bind.DatatypeConverter.parseDateTime(dateString).getTime();
         
-        //PICK UP FROM HERE
     }
             
     private void setTime()
@@ -68,14 +62,9 @@ public class TransitGUI extends javax.swing.JFrame {
             
             dateString = timeJson.getString("time");
             
-            //calendar = javax.xml.bind.DatatypeConverter.parseDateTime(dateString);
-            queryDateTime = parseToDate(dateString);
-                    
+            queryDateTime = parseToDate(dateString);                   
             
             lblTime.setText(dayAndTime.format(queryDateTime));
-            
-
-                    
         }
         catch (MalformedURLException malx)
         {
@@ -91,7 +80,6 @@ public class TransitGUI extends javax.swing.JFrame {
         }         
     }
     
-    //pull this out into a seperate class so it can be used from both this cass and the transitConnection class.
     private JSONObject retrieveFromWeb(URL url)
     {
         BufferedReader in;
@@ -167,12 +155,14 @@ public class TransitGUI extends javax.swing.JFrame {
         title.setFont(new java.awt.Font("Droid Sans", 1, 24)); // NOI18N
         title.setText("Winnipeg Transit StopChecker");
 
+        author.setFont(new java.awt.Font("Droid Sans", 0, 15)); // NOI18N
         author.setText("Created By: Owen Peterson");
 
         lblStopNo.setFont(new java.awt.Font("Droid Sans", 0, 18)); // NOI18N
         lblStopNo.setText("Enter Stop Number:");
 
         txtStop.setBackground(new java.awt.Color(255, 255, 255));
+        txtStop.setFont(new java.awt.Font("Droid Sans", 0, 15)); // NOI18N
         txtStop.setToolTipText("");
         txtStop.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -309,7 +299,7 @@ public class TransitGUI extends javax.swing.JFrame {
                             .addComponent(lblLongitude, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(13, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         lblName.getAccessibleContext().setAccessibleName("lblName");
@@ -364,7 +354,6 @@ public class TransitGUI extends javax.swing.JFrame {
         {
             try
             {
-             
                 setTime();
                 
                 tarSchedule.setText("Checking stop information. Please wait...\n");
@@ -384,8 +373,6 @@ public class TransitGUI extends javax.swing.JFrame {
                 lblLongitude.setText(longitude);
                 
                 tarSchedule.setText("");                
-             
-                
                 
                 for (int i = 0; i < scheduleItems.size(); i++)
                 {
@@ -424,7 +411,7 @@ public class TransitGUI extends javax.swing.JFrame {
                             featureName += "es";
                         }
 
-                        tarFeatures.append(featureCount + " " + featureName + "\n");                    
+                        tarFeatures.append(featureCount + " " + featureName + "\n");                
 
                     }
                 }
@@ -436,7 +423,7 @@ public class TransitGUI extends javax.swing.JFrame {
             }
             catch (NullPointerException nex)
             {
-                tarSchedule.append("Invalid stop number. Please enter a new number.\n");
+                tarSchedule.setText("Invalid stop number. Please enter a new number.\n");
             }
         }
     }//GEN-LAST:event_btnCheckActionPerformed

@@ -147,26 +147,23 @@ public class TransitConnection {
                 
                 singleRoute = routeScheduleObject.getJSONObject("scheduled-stops");
                 routeScheduleArray = singleRoute.getJSONArray("scheduled-stop");
-                
-                scheduleItems = new ArrayList<ScheduleItem>();
 
-                schedules = routeScheduleArray;
-                routeName = name;
+                scheduleItems = new ArrayList<ScheduleItem>();
                     
                 arrivals = new ArrayList<BusArrival>();
                 
-                for (int j = 0; j < schedules.length(); j++)
+                for (int j = 0; j < routeScheduleArray.length(); j++)
                 {
-                    bus = schedules.getJSONObject(j);
+                    bus = routeScheduleArray.getJSONObject(j);
                     busName = bus.getJSONObject("variant").getString("name"); 
                     arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
                     arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
                     arrivals.add(new BusArrival(busName, arrivalTime));
                 }
                     
-                scheduleItems.add(new ScheduleItem(routeName, arrivals));
+                scheduleItems.add(new ScheduleItem(name, arrivals));
                
-                sc = new Schedule(name, scheduleItems);   
+                sc = new Schedule(scheduleItems);   
                   
             }
             else if (unknownType instanceof JSONArray)
@@ -205,7 +202,7 @@ public class TransitConnection {
 
                 }
                 scheduleItems.trimToSize();
-                sc = new Schedule(name, scheduleItems);                
+                sc = new Schedule(scheduleItems);                
             }
 
         }
