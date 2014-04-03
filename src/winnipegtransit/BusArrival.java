@@ -5,6 +5,7 @@
  */
 
 package winnipegtransit;
+import java.util.Date;
 
 /**
  *
@@ -12,9 +13,9 @@ package winnipegtransit;
  */
 public class BusArrival {
     private String busName;
-    private String arrivalTime;
+    private Date arrivalTime;
     
-    public BusArrival(String busName, String arrivalTime)
+    public BusArrival(String busName, Date arrivalTime)
     {
         this.busName = busName;
         this.arrivalTime = arrivalTime;
@@ -25,7 +26,7 @@ public class BusArrival {
         return busName;
     }
     
-    public String getArrivalTime()
+    public Date getArrivalTime()
     {
         return arrivalTime;
     }

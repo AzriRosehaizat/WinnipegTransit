@@ -35,11 +35,11 @@ public class TransitGUI extends javax.swing.JFrame {
     private Calendar calendar;
     private URL timeURL;
     private JSONObject timeJson;
-    private long time;
- 
-    
+    private long time;    
     private final String API_KEY = "api-key=bEUgnZTNurbZtGAnBnJT";
     private final String WT_URL = "http://api.winnipegtransit.com/";
+    DateFormat dayAndTime = new SimpleDateFormat("EEE, MMM, d  - HH:mm");
+    DateFormat tf = new SimpleDateFormat("HH:mm");
 
     /**
      * Creates new form TransitGUI
@@ -71,8 +71,8 @@ public class TransitGUI extends javax.swing.JFrame {
             //calendar = javax.xml.bind.DatatypeConverter.parseDateTime(dateString);
             queryDateTime = parseToDate(dateString);
                     
-            DateFormat format = new SimpleDateFormat("EEE, MMM, d  - HH:mm");
-            lblTime.setText(format.format(queryDateTime));
+            
+            lblTime.setText(dayAndTime.format(queryDateTime));
             
 
                     
@@ -355,7 +355,7 @@ public class TransitGUI extends javax.swing.JFrame {
         ArrayList<BusArrival> busArrivals;
         ArrayList<StopFeature> stopFeatures;
         String busName;
-        String arrivalTime;
+        Date arrivalTime;
         StopFeature currentFeature;
         String featureName;
         int featureCount;
@@ -399,7 +399,7 @@ public class TransitGUI extends javax.swing.JFrame {
                         busName = busArrivals.get(j).getBusName();
                         arrivalTime = busArrivals.get(j).getArrivalTime();
                         
-                        tarSchedule.append(busName + " - " + arrivalTime + "\n");
+                        tarSchedule.append(busName + " - " + tf.format(arrivalTime) + "\n");
                     }
                     
                     tarSchedule.append("\n");

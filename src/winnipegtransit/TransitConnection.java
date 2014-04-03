@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import org.json.*;
 import java.util.ArrayList;
+import java.util.Date;
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -28,7 +29,6 @@ public class TransitConnection {
     private URL stopScheduleInfoURL;
     private URL stopFeaturesURL;
     private JSONObject stopFeatures;
-    
     private StopInfo s;
     private Schedule sc;
     private ArrayList<StopFeature> stopFeats;    
@@ -130,6 +130,7 @@ public class TransitConnection {
         String arrival;
         String busName;
         String routeName;
+        Date arrivalTime;
         
         JSONArray schedules;
         try
@@ -159,7 +160,8 @@ public class TransitConnection {
                     bus = schedules.getJSONObject(j);
                     busName = bus.getJSONObject("variant").getString("name"); 
                     arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
-                    arrivals.add(new BusArrival(busName, arrival));
+                    arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
+                    arrivals.add(new BusArrival(busName, arrivalTime));
                 }
                     
                 scheduleItems.add(new ScheduleItem(routeName, arrivals));
@@ -192,8 +194,9 @@ public class TransitConnection {
                         bus = schedules.getJSONObject(j);
                         busName = bus.getJSONObject("variant").getString("name"); //gets set three times. thats ok. 
                         arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
-                        
-                        arrivals.add(new BusArrival(busName, arrival));
+                       arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
+                       
+                        arrivals.add(new BusArrival(busName, arrivalTime));
                     }
                     
                     
