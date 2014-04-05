@@ -193,10 +193,7 @@ public class TransitConnection {
                             routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
                             
                             arrivals = new ArrayList<BusArrival>();
-                            
-                             //singleRoute = routeScheduleObject.getJSONObject("scheduled-stops");
-                             //routeScheduleArray = singleRoute.getJSONArray("scheduled-stop");
-                            
+
                             busName = routeScheduleObject.getJSONObject("variant").getString("name"); 
                             arrival = routeScheduleObject.getJSONObject("times").getJSONObject("arrival").getString("estimated");
                             arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
@@ -206,12 +203,9 @@ public class TransitConnection {
                             
                             scheduleItems.add(new ScheduleItem(routeName, arrivals));
 
-                            System.out.println("Its an object." + routeName);
-
                         }
                         else
                         {
-                            System.out.println("its an array!");
                             schedules = routeScheduleArray.getJSONObject(i).getJSONObject("scheduled-stops").getJSONArray("scheduled-stop");
                             routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
 
@@ -236,7 +230,6 @@ public class TransitConnection {
                     scheduleItems.trimToSize();
                     sc = new Schedule(scheduleItems);                
                 }
-            //}
 
         
         }
