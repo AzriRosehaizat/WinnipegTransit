@@ -24,16 +24,9 @@ import java.text.SimpleDateFormat;
 public class TransitGUI extends javax.swing.JFrame {
     private StopInfo stopInfo;
     private Schedule schedule;
-    private TransitConnection connection;  
     private String name;
     private String latitude;
     private String longitude;
-    private Date queryDateTime;
-    private URL timeURL;
-    private JSONObject timeJson;  
-    private final String API_KEY = "api-key=bEUgnZTNurbZtGAnBnJT";
-    private final String WT_URL = "http://api.winnipegtransit.com/";
-    DateFormat dayAndTime = new SimpleDateFormat("EEE, MMM, d  - h:mm a");
     DateFormat tf = new SimpleDateFormat("h:mm");
 
     /**
@@ -44,81 +37,16 @@ public class TransitGUI extends javax.swing.JFrame {
         setTime();
     }
     
-    private Date parseToDate(String dateString)
-    {
-        return javax.xml.bind.DatatypeConverter.parseDateTime(dateString).getTime();
-        
-    }
-            
     private void setTime()
     {
+        Date queryDateTime;
         
-        String dateString;
+        DateFormat dayAndTime = new SimpleDateFormat("EEE, MMM, d  - h:mm a");            
         
-        try
-        {
-            timeURL = new URL(WT_URL + "/time.json?" + API_KEY);
-            timeJson = retrieveFromWeb(timeURL);
-            
-            dateString = timeJson.getString("time");
-            
-            queryDateTime = parseToDate(dateString);                   
-            
-            lblTime.setText(dayAndTime.format(queryDateTime));
-        }
-        catch (MalformedURLException malx)
-        {
-            malx.printStackTrace();
-        }
-        catch (IOException iox)
-        {
-            tarSchedule.append("Could not connect to Winnipeg Transit service. Please check your internet connection.");
-        }
-        catch (NullPointerException nex)
-        {
-            //Null pointer will be thrown because there is no connection available. The message above will be displayed.
-        }         
+        queryDateTime = TransitConnection.getTime();
+        
+        lblTime.setText(dayAndTime.format(queryDateTime));
     }
-    
-    private JSONObject retrieveFromWeb(URL url)
-    {
-        BufferedReader in;
-        String strLine;
-        StringBuilder jsonInfo;
-        jsonInfo = new StringBuilder();
-        in = null;
-        JSONObject toReturn = null;
-       //read the stream from the URL into a buffered reader
-        try
-        {
-            in = new BufferedReader(new InputStreamReader(url.openStream()));
-            
-            while ((strLine = in.readLine()) != null )
-            {
-                jsonInfo.append(strLine);
-            }
-            
-            in.close();
-        }
-        catch (IOException iox)
-        {
-            System.out.println("\nInvalid stop number or connection unavailable. Please try again.");
-        }
-        
-        try
-        {
-
-            toReturn  = new JSONObject(jsonInfo.toString());
-        }
-        catch (JSONException jex)
-        {
-            tarSchedule.setText("Could not connect to Winnipeg Transit Service. Please check your internet connection.");
-        }
-        
-        return toReturn;
-
-    }
-    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -352,16 +280,16 @@ public class TransitGUI extends javax.swing.JFrame {
         
         if (evt.getSource() == btnCheck)
         {
+            setTime();
             try
-            {
-                setTime();
-                
+            {                
                 tarSchedule.setText("Checking stop information. Please wait...\n");
-                connection = new TransitConnection(this.txtStop.getText());
-                stopInfo = connection.getStopInfo();
-                schedule = connection.getScheduleInfo();
+   
+                schedule = TransitConnection.getScheduleInfo(this.txtStop.getText());
+                
+                stopInfo = schedule.getStopInfo();
                 scheduleItems = schedule.getScheduleItems();
-                stopFeatures = connection.getStopFeatures();
+                stopFeatures = schedule.getStopFeatures();
 
                 name = stopInfo.getName();
                 latitude = stopInfo.getLatitude();
