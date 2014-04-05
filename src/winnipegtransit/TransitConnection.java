@@ -109,8 +109,7 @@ public class TransitConnection {
                 bus = routeScheduleArray.getJSONObject(j);
                 busName = bus.getJSONObject("variant").getString("name");
                 
-                //arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
-                
+                                
                 try
                 {
                     //there are cases where a bus only has a departure time, and not an arrival time. I let the JSONException handle
