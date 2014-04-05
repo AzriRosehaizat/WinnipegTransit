@@ -119,6 +119,7 @@ public class TransitConnection {
     {
         String name = null;
         Object unknownType;
+        Object anotherUnknownType;
         JSONArray routeScheduleArray;
         JSONObject routeScheduleObject;
         JSONObject routeInfo = null;
@@ -175,36 +176,52 @@ public class TransitConnection {
                 
                 //only gets the first route.
                 routeInfo = routeScheduleArray.getJSONObject(1).getJSONObject("route");
-                name = routeInfo.getString("name");
-
-                scheduleItems = new ArrayList<ScheduleItem>();
                 
-                for (int i = 0; i < routeScheduleArray.length(); i++)
+                /*
+                anotherUnknownType = routeScheduleArray.getJSONObject(1).getJSONObject("scheduled-stops").getJSONObject("scheduled-stop");
+                
+                if (anotherUnknownType instanceof JSONObject)
                 {
-                    schedules = routeScheduleArray.getJSONObject(i).getJSONObject("scheduled-stops").getJSONArray("scheduled-stop");
-                    routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
+                    schedules = routeScheduleArray.getJSONObject(1).getJSONObject("scheduled-stops").getJSONArray("scheduled-stop");
+                    System.out.println("Its an object.");
                     
-                    arrivals = new ArrayList<BusArrival>();
-                
-                    for (int j = 0; j < schedules.length(); j++)
-                    {
-                        bus = schedules.getJSONObject(j);
-                        busName = bus.getJSONObject("variant").getString("name"); //gets set three times. thats ok. 
-                        arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
-                       arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
-                       
-                        arrivals.add(new BusArrival(busName, arrivalTime));
-                    }
-                    
-                    
-                    arrivals.trimToSize();
-                    scheduleItems.add(new ScheduleItem(routeName, arrivals));
-
                 }
-                scheduleItems.trimToSize();
-                sc = new Schedule(scheduleItems);                
-            }
+                else
+                {
+                        */
+                    
+                    name = routeInfo.getString("name");
 
+                    scheduleItems = new ArrayList<ScheduleItem>();
+
+                    for (int i = 0; i < routeScheduleArray.length(); i++)
+                    {
+                        schedules = routeScheduleArray.getJSONObject(i).getJSONObject("scheduled-stops").getJSONArray("scheduled-stop");
+                        routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
+
+                        arrivals = new ArrayList<BusArrival>();
+
+                        for (int j = 0; j < schedules.length(); j++)
+                        {
+                            bus = schedules.getJSONObject(j);
+                            busName = bus.getJSONObject("variant").getString("name"); //gets set three times. thats ok. 
+                            arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
+                           arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
+
+                            arrivals.add(new BusArrival(busName, arrivalTime));
+                        }
+
+
+                        arrivals.trimToSize();
+                        scheduleItems.add(new ScheduleItem(routeName, arrivals));
+
+                    }
+                    scheduleItems.trimToSize();
+                    sc = new Schedule(scheduleItems);                
+                }
+            //}
+
+        
         }
         catch (org.json.JSONException jex)
         {
@@ -212,9 +229,9 @@ public class TransitConnection {
         }
         catch (NullPointerException nex)
         {
-            //appropriate message already displayed to user.
+                //appropriate message already displayed to user.
         }
-        
+
     }
     
     private void buildStopFeatures()
