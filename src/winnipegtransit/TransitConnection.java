@@ -19,48 +19,13 @@ import java.util.Date;
  * @author owen
  */
 public class TransitConnection {
-    //private BufferedReader in;
     private static APIKey keyMaker = new APIKey();
     private static final String API_KEY = keyMaker.getAPIKey();
     private static final String WT_URL = "http://api.winnipegtransit.com/";
-    //private String strLine;
-   // private StringBuilder jsonInfo;
-    //private JSONObject scheduleInfo;
-    //private URL stopScheduleInfoURL;
-    //private URL stopFeaturesURL;
-    //private 
     private static StopInfo stopInfo;
     private static Schedule sc;
     private static ArrayList<StopFeature> stopFeats;
-   // private static Date queryDateTime;
-    
-    /*
-    public TransitConnection(String stopNo)
-    {
-        keyMaker = new APIKey();
-        API_KEY = keyMaker.getAPIKey();
-        
-        //create a request to the API for the passed in stop
-        try
-        {
-            stopScheduleInfoURL = new URL(WT_URL + "stops/" + stopNo + "/schedule.json?max-results-per-route=3&" + API_KEY);
-            stopFeaturesURL = new URL(WT_URL + "stops/" + stopNo + "/features.json?" + API_KEY);
-            
-            scheduleInfo = retrieveFromWeb(stopScheduleInfoURL);
-            stopFeatures = retrieveFromWeb(stopFeaturesURL);
-            
-            buildStopInfo();
-            buildScheduleInfo();
-            buildStopFeatures();
-        }
-        catch (MalformedURLException e)
-        {
-            e.printStackTrace();
-        }  
 
-    }
-    */
-    
     private static JSONObject retrieveFromWeb(URL url)
     {
         BufferedReader in;
@@ -95,35 +60,6 @@ public class TransitConnection {
         return toReturn;       
 
     }
-   
-    /*
-    private void buildStopInfo()
-    {
-        try 
-        {
-            JSONObject stop;
-            JSONObject geo;
-            stop = scheduleInfo.getJSONObject("stop-schedule").getJSONObject("stop");
-            geo = stop.getJSONObject("centre").getJSONObject("geographic");
-
-            String name = stop.getString("name");
-            String latitude = geo.getString("latitude");
-            String longitude = geo.getString("longitude");
-
-            stopInfo = new StopInfo(name, latitude, longitude);
-        }
-        catch (org.json.JSONException jex)
-        {
-            jex.printStackTrace();
-        }
-        catch (NullPointerException nex)
-        {
-            //pointer is null because the information could not be pulled from the website.
-            //appropriate message already displayed.
-        }
-       
-    }
-    */
     
     private static void buildScheduleInfo(String stopNo)
     {
@@ -196,9 +132,6 @@ public class TransitConnection {
             }
             else if (unknownType instanceof JSONArray)
             {
-                //in order to fix incompatibility with some larger stops, another cast and check type operation will need to be implimented
-                //to handle the larger stops, as they return an Array of objects that each contain a route schedule array.
-                
                 routeScheduleArray = (JSONArray)unknownType;
                 
                 //only gets the first route.
@@ -311,14 +244,7 @@ public class TransitConnection {
             e.printStackTrace();
         } 
     }
-    
-    /*
-    public StopInfo getStopInfo()
-    {
-        return s;
-    }
-    */
-    
+
     private static Date parseToDate(String dateString)
     {
         return javax.xml.bind.DatatypeConverter.parseDateTime(dateString).getTime();
@@ -373,14 +299,5 @@ public class TransitConnection {
         queryDateTime = checkTime();
         return queryDateTime;
     }
-    
-    /*
-    public ArrayList<StopFeature> getStopFeatures(String stopNo)
-    {
-        buildStopFeatures(stopNo);
-        return stopFeats;
-    }
-    */
-    
-    
+
 }
