@@ -21,7 +21,8 @@ import java.util.Date;
  */
 public class TransitConnection {
     private BufferedReader in;
-    private final String API_KEY = "api-key=bEUgnZTNurbZtGAnBnJT";
+    private APIKey keyMaker;
+    private final String API_KEY;
     private final String WT_URL = "http://api.winnipegtransit.com/";
     private String strLine;
     private StringBuilder jsonInfo;
@@ -35,6 +36,8 @@ public class TransitConnection {
     
     public TransitConnection(String stopNo)
     {
+        keyMaker = new APIKey();
+        API_KEY = keyMaker.getAPIKey();
         
         //create a request to the API for the passed in stop
         try
