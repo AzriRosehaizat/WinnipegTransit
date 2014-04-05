@@ -10,6 +10,7 @@ import java.util.Date;
 import org.json.JSONException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.io.IOException;
 
 /**
  *
@@ -26,12 +27,12 @@ public class TransitGUI extends javax.swing.JFrame {
     /**
      * Creates new form TransitGUI
      */
-    public TransitGUI() {
+    public TransitGUI() throws IOException {
         initComponents();
         setTime();
     }
     
-    private void setTime()
+    private void setTime() throws IOException
     {
         Date queryDateTime;
         
@@ -272,12 +273,14 @@ public class TransitGUI extends javax.swing.JFrame {
         
         if (evt.getSource() == btnCheck)
         {
-            setTime();
+            
             try
-            {                
+            {    
+                setTime();
+                
                 tarSchedule.setText("Checking stop information. Please wait...\n");
-   
-                schedule = TransitConnection.getScheduleInfo(this.txtStop.getText());
+
+                schedule = TransitConnection.getScheduleInfo(this.txtStop.getText());                
                 
                 stopInfo = schedule.getStopInfo();
                 scheduleItems = schedule.getScheduleItems();
@@ -337,9 +340,13 @@ public class TransitGUI extends javax.swing.JFrame {
                 }
                 
             }
+            catch (IOException iox)
+            {
+                iox.printStackTrace();
+            }
             catch (JSONException jex)
             {
-               
+               jex.printStackTrace();
             }
             catch (NullPointerException nex)
             {
@@ -378,7 +385,14 @@ public class TransitGUI extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new TransitGUI().setVisible(true);
+                try{
+                    new TransitGUI().setVisible(true);
+                }
+                catch (IOException iox)
+                {
+                    iox.printStackTrace();
+                }
+                
             }
         });
     }

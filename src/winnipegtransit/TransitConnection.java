@@ -26,7 +26,7 @@ public class TransitConnection {
     private static Schedule sc;
     private static ArrayList<StopFeature> stopFeats;
 
-    private static JSONObject retrieveFromWeb(URL url)
+    private static JSONObject retrieveFromWeb(URL url) throws IOException, JSONException
     {
         BufferedReader in;
         StringBuilder jsonInfo;
@@ -35,8 +35,8 @@ public class TransitConnection {
         jsonInfo = new StringBuilder();
         in = null;
        //read the stream from the URL into a buffered reader
-        try
-        {
+        //try
+        //{
             in = new BufferedReader(new InputStreamReader(url.openStream()));
             
             while ((strLine = in.readLine()) != null )
@@ -47,21 +47,22 @@ public class TransitConnection {
             in.close();
             
             toReturn = new JSONObject(jsonInfo.toString());
-        }
-        catch (IOException iox)
-        {
+        //}
+        //catch (IOException iox)
+        //{
             //System.out.println("\nInvalid stop number or connection unavailable. Please try again.");
-        }
-        catch (JSONException jex)
-        {
+        //}
+        //catch (JSONException jex)
+        //{
             //do nothing, for now.
-        }
+       // }
 
         return toReturn;       
 
     }
     
-    private static void buildScheduleInfo(String stopNo)
+    private static void buildScheduleInfo(String stopNo) throws IOException,
+            org.json.JSONException, NullPointerException, MalformedURLException
     {
         String name = null;
         Object unknownType;
@@ -84,8 +85,8 @@ public class TransitConnection {
         URL stopScheduleInfoURL;
         JSONObject scheduleInfo;
         
-        try
-        {
+        //try
+        //{
             stopScheduleInfoURL = new URL(WT_URL + "stops/" + stopNo + "/schedule.json?max-results-per-route=3&" + API_KEY);
             scheduleInfo = retrieveFromWeb(stopScheduleInfoURL);
             
@@ -170,9 +171,21 @@ public class TransitConnection {
 
                             for (int j = 0; j < schedules.length(); j++)
                             {
-                                bus = schedules.getJSONObject(j);
-                                busName = bus.getJSONObject("variant").getString("name"); //gets set three times. thats ok. 
-                                arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
+                               bus = schedules.getJSONObject(j);
+                               busName = bus.getJSONObject("variant").getString("name"); //gets set three times. thats ok. 
+                               
+                               try
+                               {
+                                   //there are cases where a bus only has a departure time, and not an arrival time. I let the JSONException handle
+                                   //these cases.
+                                   arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
+                               }
+                               catch (JSONException jex)
+                               {
+                                   arrival = bus.getJSONObject("times").getJSONObject("departure").getString("estimated");
+                               }
+                               
+                               
                                arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
 
                                 arrivals.add(new BusArrival(busName, arrivalTime));
@@ -187,23 +200,24 @@ public class TransitConnection {
                     scheduleItems.trimToSize();
                     sc = new Schedule(scheduleItems, stopInfo, stopFeats);                
                 }        
-        }
-        catch (org.json.JSONException jex)
-        {
-            jex.printStackTrace();
-        }
-        catch (NullPointerException nex)
-        {
+        //}
+        //catch (org.json.JSONException jex)
+        //{
+            //jex.printStackTrace();
+        //}
+        //catch (NullPointerException nex)
+        //{
                 //appropriate message already displayed to user.
-        }
-        catch (MalformedURLException malex)
-        {
+        //}
+        //catch (MalformedURLException malex)
+        //{
             //do nothing
-        }
+        //}
 
     }
     
-    private static void buildStopFeatures(String stopNo)
+    private static void buildStopFeatures(String stopNo) throws IOException,
+            org.json.JSONException, NullPointerException, MalformedURLException
     {
         URL stopFeaturesURL;
         JSONObject stopFeatures;
@@ -212,8 +226,8 @@ public class TransitConnection {
         String name;
         int count;
         stopFeats = new ArrayList<StopFeature>();
-        try
-        {
+        //try
+        //{
             stopFeaturesURL = new URL(WT_URL + "stops/" + stopNo + "/features.json?" + API_KEY);
             
             stopFeatures = retrieveFromWeb(stopFeaturesURL);
@@ -230,19 +244,19 @@ public class TransitConnection {
 
             stopFeats.trimToSize();
 
-        }
-        catch (org.json.JSONException jex)
-        {
+        //}
+       // catch (org.json.JSONException jex)
+        //{
           //do nothing
-        }
-        catch (NullPointerException nex)
-        {
+        //}
+       // catch (NullPointerException nex)
+        //{
             //appropriate message already displayed to user.
-        }
-        catch (MalformedURLException e)
-        {
-            e.printStackTrace();
-        } 
+        //}
+        //catch (MalformedURLException e)
+        //{
+        //    e.printStackTrace();
+        //} 
     }
 
     private static Date parseToDate(String dateString)
@@ -251,7 +265,8 @@ public class TransitConnection {
         
     }
     
-    private static Date checkTime()
+    private static Date checkTime() throws IOException,
+            MalformedURLException, NullPointerException
     {
         URL timeURL;
         JSONObject timeJson;
@@ -259,8 +274,8 @@ public class TransitConnection {
         
         String dateString;
         
-        try
-        {
+        //try
+        //{
             timeURL = new URL(WT_URL + "/time.json?" + API_KEY);
             timeJson = retrieveFromWeb(timeURL);
             
@@ -269,31 +284,31 @@ public class TransitConnection {
             queryDateTime = parseToDate(dateString);
             
             
-        }
-        catch (MalformedURLException malx)
-        {
-            malx.printStackTrace();
-        }
-        catch (IOException iox)
-        {
-            iox.printStackTrace();
-        }
-        catch (NullPointerException nex)
-        {
-            nex.printStackTrace();
-        } 
+        //}
+        //catch (MalformedURLException malx)
+        //{
+           // malx.printStackTrace();
+        //}
+        //catch (IOException iox)
+       // {
+        //    iox.printStackTrace();
+        //}
+        //catch (NullPointerException nex)
+        //{
+        //    nex.printStackTrace();
+       // } 
         
         return queryDateTime;
     }
     
-    public static Schedule getScheduleInfo(String stopNo)
+    public static Schedule getScheduleInfo(String stopNo) throws IOException
     {
         buildStopFeatures(stopNo);
         buildScheduleInfo(stopNo);
         return sc;
     }
     
-    public static Date getTime()
+    public static Date getTime() throws IOException
     {
         Date queryDateTime;
         queryDateTime = checkTime();
