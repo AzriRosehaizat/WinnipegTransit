@@ -81,7 +81,7 @@ public class TransitGUI extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         title.setFont(new java.awt.Font("Droid Sans", 1, 24)); // NOI18N
-        title.setText("Winnipeg Transit StopChecker");
+        title.setText("Winnipeg TransiTool");
 
         author.setFont(new java.awt.Font("Droid Sans", 0, 15)); // NOI18N
         author.setText("Created By: Owen Peterson");
@@ -237,11 +237,11 @@ public class TransitGUI extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(0, 169, Short.MAX_VALUE)
+                .addGap(0, 227, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(title)
                     .addComponent(author))
-                .addGap(0, 170, Short.MAX_VALUE))
+                .addGap(0, 227, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.CENTER, layout.createSequentialGroup()
                 .addGap(6, 6, 6)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
