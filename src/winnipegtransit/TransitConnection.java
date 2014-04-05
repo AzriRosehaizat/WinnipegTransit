@@ -4,7 +4,6 @@ import java.net.MalformedURLException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
-import java.io.FileNotFoundException;
 import org.json.*;
 import java.util.ArrayList;
 import java.util.Date;
@@ -195,8 +194,10 @@ public class TransitConnection {
     {
         URL stopFeaturesURL;
         JSONObject stopFeatures;
-        JSONArray features;
+        JSONArray featuresArray;
+        JSONObject featuresObject;
         JSONObject currentObj;
+        Object stopFeaturesObj;
         String name;
         int count;
         stopFeats = new ArrayList<StopFeature>();
@@ -204,15 +205,28 @@ public class TransitConnection {
         stopFeaturesURL = new URL(WT_URL + "stops/" + stopNo + "/features.json?" + API_KEY);
 
         stopFeatures = retrieveFromWeb(stopFeaturesURL);
-
-        features = stopFeatures.getJSONObject("stop-features").getJSONArray("stop-feature");
-
-        for (int i = 0; i < features.length(); i++)
+        
+        stopFeaturesObj = stopFeatures.getJSONObject("stop-features").get("stop-feature");
+        
+        if (stopFeaturesObj instanceof JSONObject)
         {
-            currentObj = features.getJSONObject(i);
-            name = currentObj.getString("name");
-            count = currentObj.getInt("count");
+            featuresObject = stopFeatures.getJSONObject("stop-features").getJSONObject("stop-feature");
+            name = featuresObject.getString("name");
+            count = featuresObject.getInt("count");
             stopFeats.add(new StopFeature(name, count));
+        }
+        else
+        {
+        
+            featuresArray = stopFeatures.getJSONObject("stop-features").getJSONArray("stop-feature");
+
+            for (int i = 0; i < featuresArray.length(); i++)
+            {
+                currentObj = featuresArray.getJSONObject(i);
+                name = currentObj.getString("name");
+                count = currentObj.getInt("count");
+                stopFeats.add(new StopFeature(name, count));
+            }
         }
 
         stopFeats.trimToSize();

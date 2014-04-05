@@ -342,10 +342,11 @@ public class TransitGUI extends javax.swing.JFrame {
             }
             catch (IOException iox)
             {
-                iox.printStackTrace();
+                tarSchedule.append("\nInvalid stop number. Please enter a new number.\n");
             }
             catch (JSONException jex)
             {
+               tarSchedule.append("\nApplication encountered a problem processing data from Winnipeg Transit.\n");
                jex.printStackTrace();
             }
             catch (NullPointerException nex)
