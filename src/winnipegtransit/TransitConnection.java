@@ -35,27 +35,16 @@ public class TransitConnection {
         jsonInfo = new StringBuilder();
         in = null;
        //read the stream from the URL into a buffered reader
-        //try
-        //{
-            in = new BufferedReader(new InputStreamReader(url.openStream()));
+        in = new BufferedReader(new InputStreamReader(url.openStream()));
             
-            while ((strLine = in.readLine()) != null )
-            {
-                jsonInfo.append(strLine);
-            }
+        while ((strLine = in.readLine()) != null )
+        {
+            jsonInfo.append(strLine);
+        }
             
-            in.close();
+        in.close();
             
-            toReturn = new JSONObject(jsonInfo.toString());
-        //}
-        //catch (IOException iox)
-        //{
-            //System.out.println("\nInvalid stop number or connection unavailable. Please try again.");
-        //}
-        //catch (JSONException jex)
-        //{
-            //do nothing, for now.
-       // }
+        toReturn = new JSONObject(jsonInfo.toString());
 
         return toReturn;       
 
@@ -85,135 +74,119 @@ public class TransitConnection {
         URL stopScheduleInfoURL;
         JSONObject scheduleInfo;
         
-        //try
-        //{
-            stopScheduleInfoURL = new URL(WT_URL + "stops/" + stopNo + "/schedule.json?max-results-per-route=3&" + API_KEY);
-            scheduleInfo = retrieveFromWeb(stopScheduleInfoURL);
-            
-            stop = scheduleInfo.getJSONObject("stop-schedule").getJSONObject("stop");
-            geo = stop.getJSONObject("centre").getJSONObject("geographic");
+        stopScheduleInfoURL = new URL(WT_URL + "stops/" + stopNo + "/schedule.json?max-results-per-route=3&" + API_KEY);
+        scheduleInfo = retrieveFromWeb(stopScheduleInfoURL);
 
-            String stopName = stop.getString("name");
-            String latitude = geo.getString("latitude");
-            String longitude = geo.getString("longitude");
+        stop = scheduleInfo.getJSONObject("stop-schedule").getJSONObject("stop");
+        geo = stop.getJSONObject("centre").getJSONObject("geographic");
 
-            stopInfo = new StopInfo(stopName, latitude, longitude);
-            
-            
-            allSchedules = scheduleInfo.getJSONObject("stop-schedule").getJSONObject("route-schedules");            
-            
-            unknownType = allSchedules.get("route-schedule");
-            
-            if (unknownType instanceof JSONObject)
+        String stopName = stop.getString("name");
+        String latitude = geo.getString("latitude");
+        String longitude = geo.getString("longitude");
+
+        stopInfo = new StopInfo(stopName, latitude, longitude);
+
+
+        allSchedules = scheduleInfo.getJSONObject("stop-schedule").getJSONObject("route-schedules");            
+
+        unknownType = allSchedules.get("route-schedule");
+
+        if (unknownType instanceof JSONObject)
+        {
+            routeScheduleObject = (JSONObject)unknownType;
+            routeInfo = routeScheduleObject.getJSONObject("route");
+            name = routeInfo.getString("name");
+
+            singleRoute = routeScheduleObject.getJSONObject("scheduled-stops");
+            routeScheduleArray = singleRoute.getJSONArray("scheduled-stop");
+
+            scheduleItems = new ArrayList<ScheduleItem>();
+
+            arrivals = new ArrayList<BusArrival>();
+
+            for (int j = 0; j < routeScheduleArray.length(); j++)
             {
-                routeScheduleObject = (JSONObject)unknownType;
-                routeInfo = routeScheduleObject.getJSONObject("route");
-                name = routeInfo.getString("name");
-                
-                singleRoute = routeScheduleObject.getJSONObject("scheduled-stops");
-                routeScheduleArray = singleRoute.getJSONArray("scheduled-stop");
+                bus = routeScheduleArray.getJSONObject(j);
+                busName = bus.getJSONObject("variant").getString("name"); 
+                arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
+                arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
+                arrivals.add(new BusArrival(busName, arrivalTime));
+            }
+
+            scheduleItems.add(new ScheduleItem(name, arrivals));
+
+            sc = new Schedule(scheduleItems, stopInfo, stopFeats);   
+
+        }
+        else if (unknownType instanceof JSONArray)
+        {
+            routeScheduleArray = (JSONArray)unknownType;
+
+            //only gets the first route.
+            routeInfo = routeScheduleArray.getJSONObject(1).getJSONObject("route");
 
                 scheduleItems = new ArrayList<ScheduleItem>();
-                    
-                arrivals = new ArrayList<BusArrival>();
-                
-                for (int j = 0; j < routeScheduleArray.length(); j++)
+
+                for (int i = 0; i < routeScheduleArray.length(); i++)
                 {
-                    bus = routeScheduleArray.getJSONObject(j);
-                    busName = bus.getJSONObject("variant").getString("name"); 
-                    arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
-                    arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
-                    arrivals.add(new BusArrival(busName, arrivalTime));
-                }
-                    
-                scheduleItems.add(new ScheduleItem(name, arrivals));
-               
-                sc = new Schedule(scheduleItems, stopInfo, stopFeats);   
-                  
-            }
-            else if (unknownType instanceof JSONArray)
-            {
-                routeScheduleArray = (JSONArray)unknownType;
-                
-                //only gets the first route.
-                routeInfo = routeScheduleArray.getJSONObject(1).getJSONObject("route");
-                   
-                    scheduleItems = new ArrayList<ScheduleItem>();
 
-                    for (int i = 0; i < routeScheduleArray.length(); i++)
+                    anotherUnknownType = routeScheduleArray.getJSONObject(i).getJSONObject("scheduled-stops").get("scheduled-stop");
+
+                    if (anotherUnknownType instanceof JSONObject)
                     {
-                        
-                        anotherUnknownType = routeScheduleArray.getJSONObject(i).getJSONObject("scheduled-stops").get("scheduled-stop");
-                        
-                        if (anotherUnknownType instanceof JSONObject)
-                        {
-                            routeScheduleObject = (JSONObject)anotherUnknownType;
-                            routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
-                            
-                            arrivals = new ArrayList<BusArrival>();
+                        routeScheduleObject = (JSONObject)anotherUnknownType;
+                        routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
 
-                            busName = routeScheduleObject.getJSONObject("variant").getString("name"); 
-                            arrival = routeScheduleObject.getJSONObject("times").getJSONObject("arrival").getString("estimated");
-                            arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
-                            arrivals.add(new BusArrival(busName, arrivalTime));
-                            
-                            arrivals.trimToSize();
-                            
-                            scheduleItems.add(new ScheduleItem(routeName, arrivals));
+                        arrivals = new ArrayList<BusArrival>();
 
-                        }
-                        else
-                        {
-                            schedules = routeScheduleArray.getJSONObject(i).getJSONObject("scheduled-stops").getJSONArray("scheduled-stop");
-                            routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
+                        busName = routeScheduleObject.getJSONObject("variant").getString("name"); 
+                        arrival = routeScheduleObject.getJSONObject("times").getJSONObject("arrival").getString("estimated");
+                        arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
+                        arrivals.add(new BusArrival(busName, arrivalTime));
 
-                            arrivals = new ArrayList<BusArrival>();
+                        arrivals.trimToSize();
 
-                            for (int j = 0; j < schedules.length(); j++)
-                            {
-                               bus = schedules.getJSONObject(j);
-                               busName = bus.getJSONObject("variant").getString("name"); //gets set three times. thats ok. 
-                               
-                               try
-                               {
-                                   //there are cases where a bus only has a departure time, and not an arrival time. I let the JSONException handle
-                                   //these cases.
-                                   arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
-                               }
-                               catch (JSONException jex)
-                               {
-                                   arrival = bus.getJSONObject("times").getJSONObject("departure").getString("estimated");
-                               }
-                               
-                               
-                               arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
-
-                                arrivals.add(new BusArrival(busName, arrivalTime));
-                            }
-
-
-                            arrivals.trimToSize();
-                            scheduleItems.add(new ScheduleItem(routeName, arrivals));
-                        }
+                        scheduleItems.add(new ScheduleItem(routeName, arrivals));
 
                     }
-                    scheduleItems.trimToSize();
-                    sc = new Schedule(scheduleItems, stopInfo, stopFeats);                
-                }        
-        //}
-        //catch (org.json.JSONException jex)
-        //{
-            //jex.printStackTrace();
-        //}
-        //catch (NullPointerException nex)
-        //{
-                //appropriate message already displayed to user.
-        //}
-        //catch (MalformedURLException malex)
-        //{
-            //do nothing
-        //}
+                    else
+                    {
+                        schedules = routeScheduleArray.getJSONObject(i).getJSONObject("scheduled-stops").getJSONArray("scheduled-stop");
+                        routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
 
+                        arrivals = new ArrayList<BusArrival>();
+
+                        for (int j = 0; j < schedules.length(); j++)
+                        {
+                           bus = schedules.getJSONObject(j);
+                           busName = bus.getJSONObject("variant").getString("name"); //gets set three times. thats ok. 
+
+                           try
+                           {
+                               //there are cases where a bus only has a departure time, and not an arrival time. I let the JSONException handle
+                               //these cases.
+                               arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
+                           }
+                           catch (JSONException jex)
+                           {
+                               arrival = bus.getJSONObject("times").getJSONObject("departure").getString("estimated");
+                           }
+
+
+                           arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
+
+                            arrivals.add(new BusArrival(busName, arrivalTime));
+                        }
+
+
+                        arrivals.trimToSize();
+                        scheduleItems.add(new ScheduleItem(routeName, arrivals));
+                    }
+
+                }
+                scheduleItems.trimToSize();
+                sc = new Schedule(scheduleItems, stopInfo, stopFeats);                
+            }
     }
     
     private static void buildStopFeatures(String stopNo) throws IOException,
@@ -226,37 +199,22 @@ public class TransitConnection {
         String name;
         int count;
         stopFeats = new ArrayList<StopFeature>();
-        //try
-        //{
-            stopFeaturesURL = new URL(WT_URL + "stops/" + stopNo + "/features.json?" + API_KEY);
-            
-            stopFeatures = retrieveFromWeb(stopFeaturesURL);
-            
-            features = stopFeatures.getJSONObject("stop-features").getJSONArray("stop-feature");
-            
-            for (int i = 0; i < features.length(); i++)
-            {
-                currentObj = features.getJSONObject(i);
-                name = currentObj.getString("name");
-                count = currentObj.getInt("count");
-                stopFeats.add(new StopFeature(name, count));
-            }
 
-            stopFeats.trimToSize();
+        stopFeaturesURL = new URL(WT_URL + "stops/" + stopNo + "/features.json?" + API_KEY);
 
-        //}
-       // catch (org.json.JSONException jex)
-        //{
-          //do nothing
-        //}
-       // catch (NullPointerException nex)
-        //{
-            //appropriate message already displayed to user.
-        //}
-        //catch (MalformedURLException e)
-        //{
-        //    e.printStackTrace();
-        //} 
+        stopFeatures = retrieveFromWeb(stopFeaturesURL);
+
+        features = stopFeatures.getJSONObject("stop-features").getJSONArray("stop-feature");
+
+        for (int i = 0; i < features.length(); i++)
+        {
+            currentObj = features.getJSONObject(i);
+            name = currentObj.getString("name");
+            count = currentObj.getInt("count");
+            stopFeats.add(new StopFeature(name, count));
+        }
+
+        stopFeats.trimToSize();
     }
 
     private static Date parseToDate(String dateString)
@@ -273,31 +231,14 @@ public class TransitConnection {
         Date queryDateTime = null;
         
         String dateString;
-        
-        //try
-        //{
-            timeURL = new URL(WT_URL + "/time.json?" + API_KEY);
-            timeJson = retrieveFromWeb(timeURL);
-            
-            dateString = timeJson.getString("time");
-            
-            queryDateTime = parseToDate(dateString);
-            
-            
-        //}
-        //catch (MalformedURLException malx)
-        //{
-           // malx.printStackTrace();
-        //}
-        //catch (IOException iox)
-       // {
-        //    iox.printStackTrace();
-        //}
-        //catch (NullPointerException nex)
-        //{
-        //    nex.printStackTrace();
-       // } 
-        
+
+        timeURL = new URL(WT_URL + "/time.json?" + API_KEY);
+        timeJson = retrieveFromWeb(timeURL);
+
+        dateString = timeJson.getString("time");
+
+        queryDateTime = parseToDate(dateString);
+
         return queryDateTime;
     }
     
