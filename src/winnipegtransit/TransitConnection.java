@@ -1,5 +1,4 @@
 package winnipegtransit;
-//import java.util.ArrayList;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.io.BufferedReader;
@@ -137,7 +136,6 @@ public class TransitConnection {
         Date arrivalTime;
         
         JSONArray schedules;
-        JSONObject schedulesObject;
         try
         {
             allSchedules = scheduleInfo.getJSONObject("stop-schedule").getJSONObject("route-schedules");            
@@ -181,8 +179,6 @@ public class TransitConnection {
                 //only gets the first route.
                 routeInfo = routeScheduleArray.getJSONObject(1).getJSONObject("route");
                    
-                    name = routeInfo.getString("name");
-
                     scheduleItems = new ArrayList<ScheduleItem>();
 
                     for (int i = 0; i < routeScheduleArray.length(); i++)
@@ -232,9 +228,7 @@ public class TransitConnection {
                     }
                     scheduleItems.trimToSize();
                     sc = new Schedule(scheduleItems);                
-                }
-
-        
+                }        
         }
         catch (org.json.JSONException jex)
         {
