@@ -107,8 +107,23 @@ public class TransitConnection {
             for (int j = 0; j < routeScheduleArray.length(); j++)
             {
                 bus = routeScheduleArray.getJSONObject(j);
-                busName = bus.getJSONObject("variant").getString("name"); 
-                arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
+                busName = bus.getJSONObject("variant").getString("name");
+                
+                //arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
+                
+                try
+                {
+                    //there are cases where a bus only has a departure time, and not an arrival time. I let the JSONException handle
+                    //these cases.
+                    arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
+                }
+                catch (JSONException jex)
+                {
+                    arrival = bus.getJSONObject("times").getJSONObject("departure").getString("estimated");
+                }
+
+                
+                
                 arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
                 arrivals.add(new BusArrival(busName, arrivalTime));
             }
@@ -177,7 +192,6 @@ public class TransitConnection {
 
                             arrivals.add(new BusArrival(busName, arrivalTime));
                         }
-
 
                         arrivals.trimToSize();
                         scheduleItems.add(new ScheduleItem(routeName, arrivals));
