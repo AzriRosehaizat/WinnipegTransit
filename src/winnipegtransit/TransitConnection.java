@@ -134,6 +134,7 @@ public class TransitConnection {
         Date arrivalTime;
         
         JSONArray schedules;
+        JSONObject schedulesObject;
         try
         {
             allSchedules = scheduleInfo.getJSONObject("stop-schedule").getJSONObject("route-schedules");            
@@ -176,44 +177,60 @@ public class TransitConnection {
                 
                 //only gets the first route.
                 routeInfo = routeScheduleArray.getJSONObject(1).getJSONObject("route");
-                
-                /*
-                anotherUnknownType = routeScheduleArray.getJSONObject(1).getJSONObject("scheduled-stops").getJSONObject("scheduled-stop");
-                
-                if (anotherUnknownType instanceof JSONObject)
-                {
-                    schedules = routeScheduleArray.getJSONObject(1).getJSONObject("scheduled-stops").getJSONArray("scheduled-stop");
-                    System.out.println("Its an object.");
-                    
-                }
-                else
-                {
-                        */
-                    
+                   
                     name = routeInfo.getString("name");
 
                     scheduleItems = new ArrayList<ScheduleItem>();
 
                     for (int i = 0; i < routeScheduleArray.length(); i++)
                     {
-                        schedules = routeScheduleArray.getJSONObject(i).getJSONObject("scheduled-stops").getJSONArray("scheduled-stop");
-                        routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
-
-                        arrivals = new ArrayList<BusArrival>();
-
-                        for (int j = 0; j < schedules.length(); j++)
+                        
+                        anotherUnknownType = routeScheduleArray.getJSONObject(i).getJSONObject("scheduled-stops").get("scheduled-stop");
+                        
+                        if (anotherUnknownType instanceof JSONObject)
                         {
-                            bus = schedules.getJSONObject(j);
-                            busName = bus.getJSONObject("variant").getString("name"); //gets set three times. thats ok. 
-                            arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
-                           arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
-
+                            routeScheduleObject = (JSONObject)anotherUnknownType;
+                            routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
+                            
+                            arrivals = new ArrayList<BusArrival>();
+                            
+                             //singleRoute = routeScheduleObject.getJSONObject("scheduled-stops");
+                             //routeScheduleArray = singleRoute.getJSONArray("scheduled-stop");
+                            
+                            busName = routeScheduleObject.getJSONObject("variant").getString("name"); 
+                            arrival = routeScheduleObject.getJSONObject("times").getJSONObject("arrival").getString("estimated");
+                            arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
                             arrivals.add(new BusArrival(busName, arrivalTime));
+                            
+                            arrivals.trimToSize();
+                            
+                            scheduleItems.add(new ScheduleItem(routeName, arrivals));
+
+                            System.out.println("Its an object." + routeName);
+
                         }
+                        else
+                        {
+                            System.out.println("its an array!");
+                            schedules = routeScheduleArray.getJSONObject(i).getJSONObject("scheduled-stops").getJSONArray("scheduled-stop");
+                            routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
+
+                            arrivals = new ArrayList<BusArrival>();
+
+                            for (int j = 0; j < schedules.length(); j++)
+                            {
+                                bus = schedules.getJSONObject(j);
+                                busName = bus.getJSONObject("variant").getString("name"); //gets set three times. thats ok. 
+                                arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
+                               arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
+
+                                arrivals.add(new BusArrival(busName, arrivalTime));
+                            }
 
 
-                        arrivals.trimToSize();
-                        scheduleItems.add(new ScheduleItem(routeName, arrivals));
+                            arrivals.trimToSize();
+                            scheduleItems.add(new ScheduleItem(routeName, arrivals));
+                        }
 
                     }
                     scheduleItems.trimToSize();
