@@ -22,7 +22,6 @@ public class TransitConnection {
     private static APIKey keyMaker = new APIKey();
     private static final String API_KEY = keyMaker.getAPIKey();
     private static final String WT_URL = "http://api.winnipegtransit.com/";
-    private static StopInfo stopInfo;
     private static Schedule sc;
     private static ArrayList<StopFeature> stopFeats;
 
@@ -34,6 +33,7 @@ public class TransitConnection {
         String strLine;
         jsonInfo = new StringBuilder();
         in = null;
+        
        //read the stream from the URL into a buffered reader
         in = new BufferedReader(new InputStreamReader(url.openStream()));
             
@@ -73,6 +73,7 @@ public class TransitConnection {
         JSONArray schedules;
         URL stopScheduleInfoURL;
         JSONObject scheduleInfo;
+        StopInfo stopInfo;
         
         stopScheduleInfoURL = new URL(WT_URL + "stops/" + stopNo + "/schedule.json?max-results-per-route=3&" + API_KEY);
         scheduleInfo = retrieveFromWeb(stopScheduleInfoURL);
