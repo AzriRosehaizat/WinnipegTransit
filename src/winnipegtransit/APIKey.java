@@ -17,8 +17,7 @@ public class APIKey {
     this.api_key = "api-key=bEUgnZTNurbZtGAnBnJT";
     
 }
-    
-    
+        
     public String getAPIKey()
     {
         return api_key;
