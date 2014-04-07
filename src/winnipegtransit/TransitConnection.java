@@ -186,77 +186,114 @@ public class TransitConnection {
         //if its a JSONArray
         else if (unknownType instanceof JSONArray)
         {
+            //cast the generic object into a JSONArray object
             routeScheduleArray = (JSONArray)unknownType;
 
             //only gets the first route.
             routeInfo = routeScheduleArray.getJSONObject(1).getJSONObject("route");
 
-                scheduleItems = new ArrayList<ScheduleItem>();
+            //create a new ScheduleItem array list
+            scheduleItems = new ArrayList<ScheduleItem>();
 
-                for (int i = 0; i < routeScheduleArray.length(); i++)
+            //for every item in the route schedule array
+            for (int i = 0; i < routeScheduleArray.length(); i++)
+            {
+
+                //we need to again test to see if the item retrieved is an Array or an Object
+                anotherUnknownType = routeScheduleArray.getJSONObject(i).getJSONObject("scheduled-stops").get("scheduled-stop");
+
+                //if its an object
+                if (anotherUnknownType instanceof JSONObject)
                 {
+                    //cast the generic object into a JSONObject
+                    routeScheduleObject = (JSONObject)anotherUnknownType;
+                    
+                    //extract the current route's name
+                    routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
 
-                    anotherUnknownType = routeScheduleArray.getJSONObject(i).getJSONObject("scheduled-stops").get("scheduled-stop");
+                    //create a new BusArrival array list
+                    arrivals = new ArrayList<BusArrival>();
 
-                    if (anotherUnknownType instanceof JSONObject)
-                    {
-                        routeScheduleObject = (JSONObject)anotherUnknownType;
-                        routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
+                    //extract the bus name and arrival time from the routeScheduleObject
+                    busName = routeScheduleObject.getJSONObject("variant").getString("name"); 
+                    arrival = routeScheduleObject.getJSONObject("times").getJSONObject("arrival").getString("estimated");
+                    arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
+                    
+                    //add a new BusArrival to the arrivals array list
+                    arrivals.add(new BusArrival(busName, arrivalTime));
 
-                        arrivals = new ArrayList<BusArrival>();
+                    //trim it down to its actual size
+                    arrivals.trimToSize();
 
-                        busName = routeScheduleObject.getJSONObject("variant").getString("name"); 
-                        arrival = routeScheduleObject.getJSONObject("times").getJSONObject("arrival").getString("estimated");
-                        arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
-                        arrivals.add(new BusArrival(busName, arrivalTime));
-
-                        arrivals.trimToSize();
-
-                        scheduleItems.add(new ScheduleItem(routeName, arrivals));
-
-                    }
-                    else
-                    {
-                        schedules = routeScheduleArray.getJSONObject(i).getJSONObject("scheduled-stops").getJSONArray("scheduled-stop");
-                        routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
-
-                        arrivals = new ArrayList<BusArrival>();
-
-                        for (int j = 0; j < schedules.length(); j++)
-                        {
-                           bus = schedules.getJSONObject(j);
-                           busName = bus.getJSONObject("variant").getString("name"); //gets set three times. thats ok. 
-
-                           try
-                           {
-                               //there are cases where a bus only has a departure time, and not an arrival time. I let the JSONException handle
-                               //these cases.
-                               arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
-                           }
-                           catch (JSONException jex)
-                           {
-                               arrival = bus.getJSONObject("times").getJSONObject("departure").getString("estimated");
-                           }
-
-
-                           arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
-
-                            arrivals.add(new BusArrival(busName, arrivalTime));
-                        }
-
-                        arrivals.trimToSize();
-                        scheduleItems.add(new ScheduleItem(routeName, arrivals));
-                    }
+                    //add a new scheduleItem using the route name and arrivals array list
+                    scheduleItems.add(new ScheduleItem(routeName, arrivals));
 
                 }
-                scheduleItems.trimToSize();
-                sc = new Schedule(scheduleItems, stopInfo, stopFeats);                
+                //however, if it is an Array
+                else
+                {
+                    //get the scheduled stops from the scheduled-stop array
+                    schedules = routeScheduleArray.getJSONObject(i).getJSONObject("scheduled-stops").getJSONArray("scheduled-stop");
+                    
+                    //extract the routes name 
+                    routeName = routeScheduleArray.getJSONObject(i).getJSONObject("route").getString("name");
+                    
+                    //create a new arrayList of BusArrival objects
+                    arrivals = new ArrayList<BusArrival>();
+
+                    //for every item in the schedules array
+                    for (int j = 0; j < schedules.length(); j++)
+                    {
+                       //get the current bus object
+                       bus = schedules.getJSONObject(j);
+                       
+                       //and the bus name
+                       busName = bus.getJSONObject("variant").getString("name"); //gets set three times. thats ok. 
+
+                       //get the busses arrival time
+                       try
+                       {
+                           //there are cases where a bus only has a departure time, and not an arrival time. I let the JSONException handle
+                           //these cases.
+                           arrival = bus.getJSONObject("times").getJSONObject("arrival").getString("estimated");
+                       }
+                       catch (JSONException jex)
+                       {
+                           arrival = bus.getJSONObject("times").getJSONObject("departure").getString("estimated");
+                       }
+
+
+                       //parse the arrival time into a date object
+                       arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
+
+                       //add a new BusArrival object to the arrivals Array list
+                       arrivals.add(new BusArrival(busName, arrivalTime));
+                    }
+
+                    //when all schedule items are processed 
+                    arrivals.trimToSize();
+                    
+                    //add a new schedule item using the route name and arrivals array list
+                    scheduleItems.add(new ScheduleItem(routeName, arrivals));
+                }
+
             }
+            
+            //trim the schedule items array list
+            scheduleItems.trimToSize();
+            
+            //build a new Schedule object using the scheduleItems Array list, stopInformation object,
+            //and stopFeatures Array List
+            sc = new Schedule(scheduleItems, stopInfo, stopFeats);                
+        }
     }
     
+    //gathers the required stop features information for a specific stop and populates
+    //the global StopFeatures array list
     private static void buildStopFeatures(String stopNo) throws IOException,
             org.json.JSONException, NullPointerException, MalformedURLException
     {
+        //storage variables used during processing
         URL stopFeaturesURL;
         JSONObject stopFeatures;
         JSONArray featuresArray;
@@ -265,14 +302,22 @@ public class TransitConnection {
         Object stopFeaturesObj;
         String name;
         int count;
+        
+        //create the stopFeatures array list        
+        //should return this instead of populating a global object in a future revision
         stopFeats = new ArrayList<StopFeature>();
 
+        //create a new URL object that gets the required info for the stop number provided
+        //as a parameter
         stopFeaturesURL = new URL(WT_URL + "stops/" + stopNo + "/features.json?" + API_KEY);
 
+        //get the JSON information from the URL and store it in a JSONObject
         stopFeatures = retrieveFromWeb(stopFeaturesURL);
         
+        //get the stop features as a generic object
         stopFeaturesObj = stopFeatures.getJSONObject("stop-features").get("stop-feature");
         
+        //if the stop features are stored in an object
         if (stopFeaturesObj instanceof JSONObject)
         {
             featuresObject = stopFeatures.getJSONObject("stop-features").getJSONObject("stop-feature");
@@ -280,59 +325,88 @@ public class TransitConnection {
             count = featuresObject.getInt("count");
             stopFeats.add(new StopFeature(name, count));
         }
+        //if the features are stored in an array
         else
         {
-        
+            //get the stopfeature array as a JSONArray
             featuresArray = stopFeatures.getJSONObject("stop-features").getJSONArray("stop-feature");
 
+            //for every stop feature 
             for (int i = 0; i < featuresArray.length(); i++)
             {
+                //get the current object within the array
                 currentObj = featuresArray.getJSONObject(i);
+                
+                //extract its name and count values
                 name = currentObj.getString("name");
                 count = currentObj.getInt("count");
+                
+                //add a new StopFeature object to the ArrayList
                 stopFeats.add(new StopFeature(name, count));
             }
         }
 
+        //trim the stopFeatures array list
         stopFeats.trimToSize();
     }
 
+    //parses a string passed into it into a date object
     private static Date parseToDate(String dateString)
     {
         return javax.xml.bind.DatatypeConverter.parseDateTime(dateString).getTime();
         
     }
     
+    //checks the Winnipeg Transit system time
     private static Date checkTime() throws IOException,
             MalformedURLException, NullPointerException
     {
+        //variables for processing
         URL timeURL;
         JSONObject timeJson;
-        Date queryDateTime = null;
-        
+        Date queryDateTime = null;        
         String dateString;
 
+        //create a new URL Object to get the time information
         timeURL = new URL(WT_URL + "/time.json?" + API_KEY);
+        
+        //retrieve the time information from the web
         timeJson = retrieveFromWeb(timeURL);
 
+        //place the time information into a local string
         dateString = timeJson.getString("time");
 
+        //convert the string into a date object
         queryDateTime = parseToDate(dateString);
 
+        //return the date object back
         return queryDateTime;
     }
     
+    //runs the process of buiding a Schedule item for a specific stop number
     public static Schedule getScheduleInfo(String stopNo) throws IOException
     {
+        //build the stop features object for the stop number
         buildStopFeatures(stopNo);
+        
+        //build the Schedule object for the stop number
         buildScheduleInfo(stopNo);
+        
+        //return the global Schedule object
         return sc;
     }
     
+    //gets the time by calling the checkTime method and returns the resulting date object
     public static Date getTime() throws IOException
     {
+        //storage for the Date object
         Date queryDateTime;
+        
+        //get the Date object from the checkTime method
+        //store it in the date variable
         queryDateTime = checkTime();
+        
+        //return the retrieved Date object
         return queryDateTime;
     }
 
