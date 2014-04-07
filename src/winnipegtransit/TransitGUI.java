@@ -429,8 +429,10 @@ public class TransitGUI extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try{
+                    //try to open the gui object
                     new TransitGUI().setVisible(true);
                 }
+                //if an exception is caught, its likely due to the lack of a server connection
                 catch (IOException iox)
                 {
                     tarSchedule.setText("Connection to Winnipeg Transit servers could not be established.");

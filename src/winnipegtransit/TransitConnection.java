@@ -18,14 +18,24 @@ import java.util.Date;
  * @author owen
  */
 public class TransitConnection {
+    
+    //creates an APIKey object so that the API key can be accessed
     private static APIKey keyMaker = new APIKey();
+    
+    //gets the API key from the API key object
     private static final String API_KEY = keyMaker.getAPIKey();
+    
+    //string containing the winnipeg tranist URL
     private static final String WT_URL = "http://api.winnipegtransit.com/";
+    
+    //storage variables for the Schedule and list of features
     private static Schedule sc;
     private static ArrayList<StopFeature> stopFeats;
 
+    //method used to retrieve JOSON information from a URL
     private static JSONObject retrieveFromWeb(URL url) throws IOException, JSONException
     {
+        //storage variables used during processing
         BufferedReader in;
         StringBuilder jsonInfo;
         JSONObject toReturn = null;
@@ -35,23 +45,30 @@ public class TransitConnection {
         
        //read the stream from the URL into a buffered reader
         in = new BufferedReader(new InputStreamReader(url.openStream()));
-            
+        
+        //while there is information to be read from the input stream
         while ((strLine = in.readLine()) != null )
         {
+            //append each line to a string object
             jsonInfo.append(strLine);
         }
-            
+        
+        //when there is no information left, close the stream
         in.close();
-            
+        
+        //return the string as a new JSON object.
         toReturn = new JSONObject(jsonInfo.toString());
 
+        //and return it.
         return toReturn;       
 
     }
     
+    //This method extracts the schedule information for a specific stop number.
     private static void buildScheduleInfo(String stopNo) throws IOException,
             org.json.JSONException, NullPointerException, MalformedURLException
     {
+        //storage variables used for storing information during processing
         String name = null;
         Object unknownType;
         Object anotherUnknownType;
@@ -74,42 +91,71 @@ public class TransitConnection {
         JSONObject scheduleInfo;
         StopInfo stopInfo;
         
+        //build the URL object for the information that we need to retrieve, patching in the stop number passed in
+        //as a parameter
         stopScheduleInfoURL = new URL(WT_URL + "stops/" + stopNo + "/schedule.json?max-results-per-route=3&" + API_KEY);
+        
+        //retreve the schedule JSON string from the web using the retrieveFromWeb method
         scheduleInfo = retrieveFromWeb(stopScheduleInfoURL);
 
+        //get a JSON object containting the stop information
         stop = scheduleInfo.getJSONObject("stop-schedule").getJSONObject("stop");
+        
+        //create a JSON Object containing the geographic information
         geo = stop.getJSONObject("centre").getJSONObject("geographic");
 
+        //retrieve specific stop information from the stop and geo JSON objects.
         String stopName = stop.getString("name");
         String latitude = geo.getString("latitude");
         String longitude = geo.getString("longitude");
 
+        //create a stopInfo object from the name, lattitude and longitude
+        //will be built into a Schedule object further into the class
         stopInfo = new StopInfo(stopName, latitude, longitude);
-
-
+        
+        //get a JSON Object containging the route schedule information for the stop
         allSchedules = scheduleInfo.getJSONObject("stop-schedule").getJSONObject("route-schedules");            
 
+        //in order to determine if the route schedule information is stored in an Object or an Array
+        //get the route schedule object and place it into a generic Object.
+        //then test to see if it is an instance of a JSONArray or JSONObject and take appropriate 
+        //action
         unknownType = allSchedules.get("route-schedule");
 
+        //if it is a JSONObject, then no array is present and cannot be iterated.
         if (unknownType instanceof JSONObject)
         {
+            //cast the unknownType into a JSONObject
             routeScheduleObject = (JSONObject)unknownType;
+            
+            //get the route info into another object
             routeInfo = routeScheduleObject.getJSONObject("route");
+            
+            //extract the name fro the routeInfo object
             name = routeInfo.getString("name");
 
+            //get the single route stop information from the routeSchedue object.
             singleRoute = routeScheduleObject.getJSONObject("scheduled-stops");
+            
+            //get the array containing the scheduled stop information
             routeScheduleArray = singleRoute.getJSONArray("scheduled-stop");
 
+            //create a new scheduleItem array list
             scheduleItems = new ArrayList<ScheduleItem>();
 
+            //create a new BusArrival array list
             arrivals = new ArrayList<BusArrival>();
 
+            //for every item in the routeSchedule array
             for (int j = 0; j < routeScheduleArray.length(); j++)
             {
+                //extract the bus object from the array at the current position
                 bus = routeScheduleArray.getJSONObject(j);
+                
+                //and then store the bus name in a variable
                 busName = bus.getJSONObject("variant").getString("name");
                 
-                                
+                //then get the time information for the current bus.            
                 try
                 {
                     //there are cases where a bus only has a departure time, and not an arrival time. I let the JSONException handle
@@ -119,19 +165,25 @@ public class TransitConnection {
                 catch (JSONException jex)
                 {
                     arrival = bus.getJSONObject("times").getJSONObject("departure").getString("estimated");
-                }
-
+                }                
                 
-                
+                //convert the arrival time string into a date object
                 arrivalTime = javax.xml.bind.DatatypeConverter.parseDateTime(arrival).getTime();
+                
+                //add a BusArrival object to the arrivals Array List
                 arrivals.add(new BusArrival(busName, arrivalTime));
             }
 
+            //when all arrivals are processed, add a new schedule item to the scheduleItems array list
+            //there will only be one item. I might change this around later.
             scheduleItems.add(new ScheduleItem(name, arrivals));
 
+            //create the new schedule item
             sc = new Schedule(scheduleItems, stopInfo, stopFeats);   
 
         }
+        
+        //if its a JSONArray
         else if (unknownType instanceof JSONArray)
         {
             routeScheduleArray = (JSONArray)unknownType;
