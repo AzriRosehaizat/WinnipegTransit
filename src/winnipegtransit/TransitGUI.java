@@ -34,13 +34,20 @@ public class TransitGUI extends javax.swing.JFrame {
     
     private void setTime() throws IOException
     {
-        Date queryDateTime;
-        
-        DateFormat dayAndTime = new SimpleDateFormat("EEE, MMM, d  - h:mm a");            
-        
-        queryDateTime = TransitConnection.getTime();
-        
-        lblTime.setText(dayAndTime.format(queryDateTime));
+        try
+        {
+            Date queryDateTime;
+
+            DateFormat dayAndTime = new SimpleDateFormat("EEE, MMM, d  - h:mm a");            
+
+            queryDateTime = TransitConnection.getTime();
+
+            lblTime.setText(dayAndTime.format(queryDateTime));
+        }
+        catch (IOException iox)
+        {
+            tarSchedule.append("Connection to Winnipeg Transit servers could not be established.\n");
+        }
     }
 
     /**
@@ -391,9 +398,9 @@ public class TransitGUI extends javax.swing.JFrame {
                 }
                 catch (IOException iox)
                 {
-                    iox.printStackTrace();
+                    tarSchedule.setText("Connection to Winnipeg Transit servers could not be established.");
                 }
-                
+
             }
         });
     }
@@ -416,7 +423,7 @@ public class TransitGUI extends javax.swing.JFrame {
     private javax.swing.JLabel lblStopNo;
     private javax.swing.JLabel lblTime;
     private javax.swing.JTextArea tarFeatures;
-    private javax.swing.JTextArea tarSchedule;
+    private static javax.swing.JTextArea tarSchedule;
     private javax.swing.JLabel title;
     private javax.swing.JTextField txtStop;
     // End of variables declaration//GEN-END:variables
