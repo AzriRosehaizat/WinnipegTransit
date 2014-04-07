@@ -17,11 +17,8 @@ import java.io.IOException;
  * @author owen
  */
 public class TransitGUI extends javax.swing.JFrame {
-    private StopInfo stopInfo;
-    private Schedule schedule;
-    private String name;
-    private String latitude;
-    private String longitude;
+    
+    //public dateFormat object for formatting the bus arrival time
     DateFormat tf = new SimpleDateFormat("h:mm");
 
     /**
@@ -29,23 +26,31 @@ public class TransitGUI extends javax.swing.JFrame {
      */
     public TransitGUI() throws IOException {
         initComponents();
+        
+        //sets the system time on the gui when the window first loads
         setTime();
     }
     
+    //method used for setting the time on the GUI
     private void setTime() throws IOException
     {
         try
         {
+            //storage for the current date and time
             Date queryDateTime;
 
+            //formatting object for formatting the date for the gui
             DateFormat dayAndTime = new SimpleDateFormat("EEE, MMM, d  - h:mm a");            
 
+            //get the time from the TransitConnection class and store it locally
             queryDateTime = TransitConnection.getTime();
 
+            //set the time label on the gui, formatted using the date format object
             lblTime.setText(dayAndTime.format(queryDateTime));
         }
         catch (IOException iox)
         {
+            //if an IO exception is caught at this point its due to the lack of a connection to the server
             tarSchedule.append("Connection to Winnipeg Transit servers could not be established.\n");
         }
     }
@@ -268,6 +273,13 @@ public class TransitGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_txtStopActionPerformed
 
     private void btnCheckActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckActionPerformed
+        
+        //serval storage variables for information needed to populate the gui
+        StopInfo stopInfo;
+        Schedule schedule;
+        String name;
+        String latitude;
+        String longitude;        
         ScheduleItem si = null;
         ArrayList<ScheduleItem> scheduleItems;
         ArrayList<BusArrival> busArrivals;
@@ -280,73 +292,96 @@ public class TransitGUI extends javax.swing.JFrame {
         
         if (evt.getSource() == btnCheck)
         {
-            
+            //when the check button is clicked
             try
             {    
+                //update the time
                 setTime();
                 
+                //tell the user that the check is occuring, just in case the connection is slow
                 tarSchedule.setText("Checking stop information. Please wait...\n");
 
+                //get the schedule from the transit connection class for the stop number taken from the gui
                 schedule = TransitConnection.getScheduleInfo(this.txtStop.getText());                
                 
+                //extract individual objects from the schedule object
                 stopInfo = schedule.getStopInfo();
                 scheduleItems = schedule.getScheduleItems();
                 stopFeatures = schedule.getStopFeatures();
 
+                //extract values from the stopInfo object
                 name = stopInfo.getName();
                 latitude = stopInfo.getLatitude();
                 longitude = stopInfo.getLongitude();
              
-            
+                //set the GUI lables to the extracted stopInfo values
                 lblName.setText(name);
                 lblLatitude.setText(latitude);
                 lblLongitude.setText(longitude);
                 
+                //blank out the schedule
                 tarSchedule.setText("");                
                 
+                //loop through each of the schedule items and print out thier contents
                 for (int i = 0; i < scheduleItems.size(); i++)
                 {
+                    //gets the current schedule item
                     si = scheduleItems.get(i);
+                    
+                    //gets all of the bus arrivals for the current schedule item
                     busArrivals = si.getBusArrivals();
+                    
+                    //print out a header with the route name
                     tarSchedule.append(si.getRouteName() + "\n");
                     tarSchedule.append("--------------------------------------------------\n");
                     
+                    //for every arriving bus
                     for (int j = 0; j < busArrivals.size(); j++)
                     {
+                        //get the busses name and arrival time
                         busName = busArrivals.get(j).getBusName();
                         arrivalTime = busArrivals.get(j).getArrivalTime();
                         
+                        //and print out a line with the information in the schedule box
                         tarSchedule.append(tf.format(arrivalTime) + " - " + busName + "\n");
                     }
                     
+                    //add a line break between schedule items
                     tarSchedule.append("\n");
                 }
                 
+                //if there are no stop features present, inform the user
                 if (stopFeatures.isEmpty())
                 {
                      tarFeatures.setText("This stop has no special features.");       
                 }
                 else
                 {
+                    //otherwise blank out the old features
                     tarFeatures.setText("");                
                 
+                    //and then for every stop feature
                     for (int i = 0; i < stopFeatures.size(); i++)
                     {
+                        //extract values from the feature in scope
                         currentFeature = stopFeatures.get(i);
                         featureName = currentFeature.getName();
                         featureCount = currentFeature.getCount();
 
+                        //sprinkle in a little pluralization
                         if (featureCount > 1 && featureName.equals("Bench"))
                         {
                             featureName += "es";
                         }
 
+                        //and add the feature item to the Stop Features text area.
                         tarFeatures.append(featureCount + " " + featureName + "\n");                
 
                     }
                 }
                 
             }
+            //handle any exceptions that may be caught.
             catch (IOException iox)
             {
                 tarSchedule.append("\nInvalid stop number. Please enter a new number.\n");
