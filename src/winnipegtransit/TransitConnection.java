@@ -314,36 +314,45 @@ public class TransitConnection {
         //get the JSON information from the URL and store it in a JSONObject
         stopFeatures = retrieveFromWeb(stopFeaturesURL);
         
-        //get the stop features as a generic object
-        stopFeaturesObj = stopFeatures.getJSONObject("stop-features").get("stop-feature");
-        
-        //if the stop features are stored in an object
-        if (stopFeaturesObj instanceof JSONObject)
+        try
         {
-            featuresObject = stopFeatures.getJSONObject("stop-features").getJSONObject("stop-feature");
-            name = featuresObject.getString("name");
-            count = featuresObject.getInt("count");
-            stopFeats.add(new StopFeature(name, count));
-        }
-        //if the features are stored in an array
-        else
-        {
-            //get the stopfeature array as a JSONArray
-            featuresArray = stopFeatures.getJSONObject("stop-features").getJSONArray("stop-feature");
+            //get the stop features as a generic object
+            //there is potential that there may not be a stop-feature object. Patched with a try-catch.
+            stopFeaturesObj = stopFeatures.getJSONObject("stop-features").get("stop-feature");
 
-            //for every stop feature 
-            for (int i = 0; i < featuresArray.length(); i++)
+        
+            //if the stop features are stored in an object
+            if (stopFeaturesObj instanceof JSONObject)
             {
-                //get the current object within the array
-                currentObj = featuresArray.getJSONObject(i);
-                
-                //extract its name and count values
-                name = currentObj.getString("name");
-                count = currentObj.getInt("count");
-                
-                //add a new StopFeature object to the ArrayList
+                featuresObject = stopFeatures.getJSONObject("stop-features").getJSONObject("stop-feature");
+                name = featuresObject.getString("name");
+                count = featuresObject.getInt("count");
                 stopFeats.add(new StopFeature(name, count));
             }
+            //if the features are stored in an array
+            else
+            {
+                //get the stopfeature array as a JSONArray
+                featuresArray = stopFeatures.getJSONObject("stop-features").getJSONArray("stop-feature");
+
+                //for every stop feature 
+                for (int i = 0; i < featuresArray.length(); i++)
+                {
+                    //get the current object within the array
+                    currentObj = featuresArray.getJSONObject(i);
+
+                    //extract its name and count values
+                    name = currentObj.getString("name");
+                    count = currentObj.getInt("count");
+
+                    //add a new StopFeature object to the ArrayList
+                    stopFeats.add(new StopFeature(name, count));
+                }
+            }
+        }
+        catch (JSONException jex)
+        {
+            //do nothing. ArrayList should be evaluated as empty on the GUI class.
         }
 
         //trim the stopFeatures array list
